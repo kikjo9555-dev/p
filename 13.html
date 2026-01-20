@@ -351,17 +351,19 @@
             height: 100%;
             object-fit: contain;
             object-position: center;
-            transition: 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
-            background: linear-gradient(135deg, rgba(15, 28, 63, 0.4), rgba(0, 0, 0, 0.2))
+            transition: opacity 80ms ease;
+            background: linear-gradient(135deg, rgba(15, 28, 63, 0.4), rgba(0, 0, 0, 0.2));
+            will-change: opacity;
+            backface-visibility: hidden;
         }
         
         .image-box:hover img {
-            transform: scale(1.08) rotate(0.5deg);
-            filter: brightness(1.1)
+            transform: scale(1.05);
+            filter: brightness(1.08);
         }
         
         .image-box:active img {
-            filter: brightness(1.25) saturate(1.2)
+            filter: brightness(1.15) saturate(1.1);
         }
         
         .caption {
@@ -803,34 +805,50 @@
             }
         }
 
-        // fade helper
+        // fade helper - optimized for instant image change
+        let isTransitioning = false;
+
         function setImageWithFade(newIndex) {
+            if (isTransitioning) return; // Prevent rapid clicking issues
+            isTransitioning = true;
+
             index = (newIndex + images.length) % images.length;
             if (!photo) return;
-            photo.style.transition = 'opacity 220ms ease';
+
+            // Instant image change - no delay
+            photo.src = images[index];
+            message.innerText = messages[index];
+            timeline.innerText = memories[index];
+
+            // Optional: Fast fade effect (50ms instead of 220ms)
+            photo.style.transition = 'opacity 80ms ease';
             photo.style.opacity = '0';
-            setTimeout(() => {
-                photo.src = images[index];
-                message.innerText = messages[index];
-                timeline.innerText = memories[index];
+
+            requestAnimationFrame(() => {
                 photo.style.opacity = '1';
-                // explosion/particles on last
+            });
+
+            // Reset transition flag after fade completes
+            setTimeout(() => {
+                isTransitioning = false;
+            }, 80);
+
+            // explosion/particles on last
+            if (index === images.length - 1) {
+                explosion.style.display = 'flex';
+                setTimeout(() => explosion.style.display = 'none', 1500);
+                createHeartParticles();
+            }
+            // show/hide read button
+            if (letterBtn) letterBtn.style.display = (index === images.length - 1) ? 'inline-block' : 'none';
+            // stop floating animation on last image
+            if (cardEl) {
                 if (index === images.length - 1) {
-                    explosion.style.display = 'flex';
-                    setTimeout(() => explosion.style.display = 'none', 1500);
-                    createHeartParticles();
+                    cardEl.classList.add('no-float');
+                } else {
+                    cardEl.classList.remove('no-float');
                 }
-                // show/hide read button
-                if (letterBtn) letterBtn.style.display = (index === images.length - 1) ? 'inline-block' : 'none';
-                // stop floating animation on last image
-                if (cardEl) {
-                    if (index === images.length - 1) {
-                        cardEl.classList.add('no-float');
-                    } else {
-                        cardEl.classList.remove('no-float');
-                    }
-                }
-            }, 200);
+            }
         }
 
         function nextImage() {
