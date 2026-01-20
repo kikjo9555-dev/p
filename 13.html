@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>For Preethi ❤️</title>
+    <title>For Preethi(MY BABY) ❤️</title>
 
     <style>
         * {
@@ -683,6 +683,70 @@
         .close:active {
             transform: translateY(-1px) scale(0.95)
         }
+        /* Mobile Performance Optimizations */
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 0;
+            }
+            .card {
+                animation: none;
+                will-change: auto;
+            }
+            .card.tilting {
+                transform: none !important;
+            }
+            .star {
+                animation: twinkle 4s infinite;
+                box-shadow: none;
+            }
+            .image-box img {
+                transform: scale(1) !important;
+            }
+            .image-box:hover img {
+                transform: scale(1.02) !important;
+            }
+            canvas {
+                will-change: auto;
+            }
+            /* Reduce filter effects on mobile */
+            .image-box:active img {
+                filter: brightness(1.1) !important;
+            }
+            /* Lighter animations on mobile */
+            .nameGlow {
+                animation: none !important;
+            }
+            @keyframes nameGlow {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.85;
+                }
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .card {
+                padding: 25px;
+                max-width: 95%;
+            }
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+            }
+            .play-btn {
+                padding: 8px 18px;
+                font-size: 0.85rem;
+            }
+            .letter-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 
@@ -749,6 +813,10 @@
     </div>
 
     <script>
+        // Mobile detection for performance optimization
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isLowEndDevice = window.devicePixelRatio > 2 || (performance && performance.memory && performance.memory.jsHeapSizeLimit < 536870912);
+
         const images = [
             'whatsapp/WhatsApp Image 2026-01-18 at 1.27.07 PM.jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 1.27.07 PM (2).jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 1.27.07 PM (1).jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 1.27.08 PM (1).jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 1.27.08 PM (2).jpeg',
             'whatsapp/WhatsApp Image 2026-01-18 at 1.27.08 PM.jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 1.27.09 PM.jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 5.48.43 PM.jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 5.48.44 PM (1).jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 5.48.44 PM.jpeg', 'whatsapp/WhatsApp Image 2026-01-18 at 6.01.56 PM.jpeg'
@@ -859,9 +927,10 @@
             setImageWithFade(index - 1);
         }
 
-        // Heart particles effect
+        // Heart particles effect - optimized for mobile
         function createHeartParticles() {
-            for (let i = 0; i < 18; i++) {
+            const particleCount = isMobile ? 10 : 18; // Reduce particles on mobile
+            for (let i = 0; i < particleCount; i++) {
                 const heart = document.createElement('div');
                 heart.innerHTML = '❤️';
                 heart.style.position = 'fixed';
@@ -871,6 +940,7 @@
                 heart.style.opacity = '1';
                 heart.style.zIndex = '70';
                 heart.style.pointerEvents = 'none';
+                heart.style.willChange = 'transform, opacity';
                 document.body.appendChild(heart);
 
                 const duration = Math.random() * 1.6 + 1.2;
@@ -881,9 +951,8 @@
                     const elapsed = (Date.now() - startTime) / 1000;
                     const progress = elapsed / duration;
                     if (progress < 1) {
-                        heart.style.top = (startY - progress * (120 + Math.random() * 60)) + 'vh';
+                        heart.style.transform = `translateY(${ -progress * (120 + Math.random() * 60) }vh) translateX(${Math.sin(progress * Math.PI * 2) * 12}px)`;
                         heart.style.opacity = (1 - progress);
-                        heart.style.transform = `translateX(${Math.sin(progress * Math.PI * 2) * 12}px)`;
                         requestAnimationFrame(animate);
                     } else {
                         heart.remove();
@@ -950,10 +1019,12 @@
             if (e.key === 'Escape') closeLightbox();
         });
 
-        // touch / swipe support on imageBox
+        // touch / swipe support on imageBox - with passive listeners for better mobile perf
         let touchStartX = 0;
         if (imageBox) {
-            imageBox.addEventListener('touchstart', (e) => touchStartX = e.changedTouches[0].clientX);
+            imageBox.addEventListener('touchstart', (e) => touchStartX = e.changedTouches[0].clientX, {
+                passive: true
+            });
             imageBox.addEventListener('touchend', (e) => {
                 const dx = e.changedTouches[0].clientX - touchStartX;
                 if (dx < -40) {
@@ -963,11 +1034,13 @@
                     stopAuto();
                     prevImage();
                 }
+            }, {
+                passive: true
             });
         }
 
-        // interactive card tilt while hovering (resumes float animation on leave)
-        if (cardEl) {
+        // interactive card tilt while hovering (resumes float animation on leave) - disabled on mobile
+        if (cardEl && !isMobile) {
             cardEl.addEventListener('mousemove', (e) => {
                 cardEl.classList.add('tilting');
                 const rect = cardEl.getBoundingClientRect();
@@ -1050,34 +1123,47 @@
         updateCountdown();
         setInterval(updateCountdown, 60000);
 
-        /* Stars with glow */
-        for (let i = 0; i < 150; i++) {
+        /* Stars with glow - optimized for mobile */
+        const starCount = isMobile ? 80 : 150; // Reduce stars on mobile
+        for (let i = 0; i < starCount; i++) {
             const s = document.createElement('div');
             s.className = 'star';
             s.style.left = Math.random() * 100 + 'vw';
             s.style.top = Math.random() * 100 + 'vh';
             s.style.animationDelay = Math.random() * 3 + 's';
+            s.style.willChange = 'opacity';
             stars.appendChild(s)
         }
 
-        // Add interactive mouse glow effect
+        // Add interactive mouse glow effect with throttling for mobile
+        let lastMouseMove = 0;
+        const mouseThrottle = isMobile ? 100 : 16;
         document.addEventListener('mousemove', (e) => {
-            const x = e.clientX / innerWidth;
-            const y = e.clientY / innerHeight;
-            document.documentElement.style.setProperty('--mouse-x', x);
-            document.documentElement.style.setProperty('--mouse-y', y);
+            const now = Date.now();
+            if (now - lastMouseMove >= mouseThrottle) {
+                lastMouseMove = now;
+                const x = e.clientX / innerWidth;
+                const y = e.clientY / innerHeight;
+                document.documentElement.style.setProperty('--mouse-x', x);
+                document.documentElement.style.setProperty('--mouse-y', y);
+            }
+        }, {
+            passive: true
         });
 
-        /* Fireworks */
+        /* Fireworks - optimized for mobile */
         const canvas = document.getElementById('fireworks'),
-            ctx = canvas.getContext('2d');
+            ctx = canvas.getContext('2d', {
+                alpha: true
+            });
         canvas.width = innerWidth;
         canvas.height = innerHeight;
 
         function startFireworks() {
             let p = [];
             const colors = ['#ff9acb', '#ffd1e8', '#ff4f9a', '#ff1493', '#ffffff'];
-            for (let i = 0; i < 120; i++) {
+            const particleCount = isMobile ? 60 : 120; // Reduce particles on mobile
+            for (let i = 0; i < particleCount; i++) {
                 p.push({
                     x: canvas.width / 2,
                     y: canvas.height / 2,
@@ -1090,22 +1176,22 @@
             }
 
             const a = setInterval(() => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                p.forEach(o => {
-                    ctx.fillStyle = o.color;
-                    ctx.globalAlpha = o.l / 80;
-                    ctx.beginPath();
-                    ctx.arc(o.x, o.y, o.size, 0, 6.28);
-                    ctx.fill();
-                    o.x += o.dx;
-                    o.y += o.dy;
-                    o.dy += 0.1;
-                    o.l--;
-                });
-                ctx.globalAlpha = 1;
-                p = p.filter(o => o.l > 0);
-                if (!p.length) clearInterval(a);
-            }, 30)
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    p.forEach(o => {
+                        ctx.fillStyle = o.color;
+                        ctx.globalAlpha = o.l / 80;
+                        ctx.beginPath();
+                        ctx.arc(o.x, o.y, o.size, 0, 6.28);
+                        ctx.fill();
+                        o.x += o.dx;
+                        o.y += o.dy;
+                        o.dy += 0.1;
+                        o.l--;
+                    });
+                    ctx.globalAlpha = 1;
+                    p = p.filter(o => o.l > 0);
+                    if (!p.length) clearInterval(a);
+                }, isMobile ? 50 : 30) // Slower frame rate on mobile
         }
     </script>
 </body>
