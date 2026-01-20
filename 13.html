@@ -265,10 +265,17 @@
             color: #fff;
             font-size: 1.1rem;
             margin-bottom: 15px;
+            margin-top: 8px;
             font-weight: 600;
             letter-spacing: 0.3px;
             text-shadow: 0 0 15px rgba(255, 159, 203, 0.4);
-            animation: countdownPulse 1.5s ease-in-out infinite
+            animation: countdownPulse 1.5s ease-in-out infinite;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            opacity: 1;
         }
         
         @keyframes countdownPulse {
@@ -853,6 +860,8 @@
         const nextBtn = document.getElementById('nextBtn');
         const imageBox = document.getElementById('imageBox');
         const cardEl = document.querySelector('.card');
+        const countdown = document.getElementById('countdown');
+        const bar = document.getElementById('bar');
 
         // initialize UI
         function refreshUI() {
@@ -1115,17 +1124,83 @@
             setTimeout(() => location.href = `https://wa.me/${phone}?text=${msg}`, 2500)
         }
 
-        /* Countdown July 20 */
-        const birthday = new Date('2026-07-20');
+        /* Countdown - Real-time timer with days, hours, minutes, seconds */
+        let birthday = new Date('2026-07-20'); // Default date
 
         function updateCountdown() {
+            const countdownEl = document.getElementById('countdown');
+            const barEl = document.getElementById('bar');
+
+            if (!countdownEl || !barEl) {
+                console.log('Countdown elements not found');
+                return;
+            }
+
             const now = new Date();
-            const months = (birthday.getFullYear() - now.getFullYear()) * 12 + (birthday.getMonth() - now.getMonth());
-            countdown.innerText = `Still ${months} months to go 🌙`;
-            bar.style.width = Math.min(100, (12 - months) / 12 * 100) + '%';
+            const timeLeft = birthday - now;
+
+            if (timeLeft <= 0) {
+                countdownEl.innerHTML = `🎉 Today is the day! 🎉`;
+                barEl.style.width = '100%';
+                return;
+            }
+
+            // Calculate days, hours, minutes, seconds
+            const totalSeconds = Math.floor(timeLeft / 1000);
+            const days = Math.floor(totalSeconds / (60 * 60 * 24));
+            const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60));
+            const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+
+            // Format with leading zeros
+            const formatTime = (val) => String(val).padStart(2, '0');
+
+            // Create nice display
+            const timerHTML = `
+                <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 700; color: #ffd1e8;">${days}</div>
+                        <div style="font-size: 0.75rem; color: #ff9acb; margin-top: 2px;">DAYS</div>
+                    </div>
+                    <div style="font-size: 1.5rem; color: #ff9acb;">:</div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 700; color: #ffd1e8;">${formatTime(hours)}</div>
+                        <div style="font-size: 0.75rem; color: #ff9acb; margin-top: 2px;">HRS</div>
+                    </div>
+                    <div style="font-size: 1.5rem; color: #ff9acb;">:</div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 700; color: #ffd1e8;">${formatTime(minutes)}</div>
+                        <div style="font-size: 0.75rem; color: #ff9acb; margin-top: 2px;">MINS</div>
+                    </div>
+                    <div style="font-size: 1.5rem; color: #ff9acb;">:</div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 700; color: #ffd1e8;">${formatTime(seconds)}</div>
+                        <div style="font-size: 0.75rem; color: #ff9acb; margin-top: 2px;">SECS</div>
+                    </div>
+                </div>
+            `;
+
+            countdownEl.innerHTML = timerHTML;
+            countdownEl.textContent = `${days} days, ${hours}:${formatTime(minutes)}:${formatTime(seconds)} left`;
+
+            // Update progress bar
+            const totalDays = 365; // Approximate days in a year
+            const daysLeft = (birthday - now) / (1000 * 60 * 60 * 24);
+            const progress = Math.max(0, Math.min(100, (totalDays - daysLeft) / totalDays * 100));
+            barEl.style.width = progress + '%';
         }
-        updateCountdown();
-        setInterval(updateCountdown, 60000);
+
+        // Function to set custom date
+        window.setCountdownDate = function(dateString) {
+            birthday = new Date(dateString);
+            updateCountdown();
+        };
+
+        // Update immediately and then every second for real-time updates
+        setTimeout(() => {
+            updateCountdown();
+            setInterval(updateCountdown, 1000); // Update every second
+        }, 100);
 
         /* Stars with glow - optimized for mobile */
         const starCount = isMobile ? 80 : 150; // Reduce stars on mobile
