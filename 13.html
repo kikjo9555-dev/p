@@ -921,6 +921,10 @@
 
         function nextImage() {
             setImageWithFade(index + 1);
+            // Auto-pause when reaching last image during slideshow
+            if (autoPlaying && index === images.length - 1) {
+                stopAuto();
+            }
         }
 
         function prevImage() {
