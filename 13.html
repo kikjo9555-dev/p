@@ -762,6 +762,12 @@
     <canvas id="fireworks"></canvas>
     <div class="stars" id="stars"></div>
 
+    <!-- Audio Element -->
+    <audio id="bgMusic" preload="auto">
+        <source src="13.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
     <div class="intro">
         <h1>Just a Quiet Reminder ❤️</h1>
         <p>Some dates are worth waiting for</p>
@@ -862,6 +868,7 @@
         const cardEl = document.querySelector('.card');
         const countdown = document.getElementById('countdown');
         const bar = document.getElementById('bar');
+        const bgMusic = document.getElementById('bgMusic');
 
         // initialize UI
         function refreshUI() {
@@ -993,12 +1000,20 @@
             if (autoPlaying) return;
             autoPlaying = true;
             if (playBtn) playBtn.innerText = 'Pause ⏸';
+            // Play music when slideshow starts
+            if (bgMusic) {
+                bgMusic.play().catch(err => console.log('Audio play failed:', err));
+            }
             autoTimer = setInterval(() => nextImage(), interval);
         }
 
         function stopAuto() {
             autoPlaying = false;
             if (playBtn) playBtn.innerText = 'Play ▶';
+            // Pause music when slideshow stops
+            if (bgMusic) {
+                bgMusic.pause();
+            }
             if (autoTimer) {
                 clearInterval(autoTimer);
                 autoTimer = null;
